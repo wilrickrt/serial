@@ -1,0 +1,4 @@
+@PACKAGE_INIT@
+
+include(${CMAKE_CURRENT_LIST_DIR}/wrt-serial-targets.cmake)
+check_required_components(wrt-serial)

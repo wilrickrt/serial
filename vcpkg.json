@@ -1,0 +1,6 @@
+{
+  "name": "wrt-serial",
+  "version": "0.1.0",
+  "description": "Windows serial communication",
+  "homepage": "https://github.com/wilrickrt/serial/"
+}
