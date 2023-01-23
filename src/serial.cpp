@@ -97,7 +97,7 @@ namespace wrt
 	{
 		DWORD written;
 		WriteFile(m_handle,
-			(void*)value,
+			&value,
 			sizeof(value),
 			&written,
 			nullptr);
