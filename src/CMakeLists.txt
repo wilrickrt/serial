@@ -1,4 +1,5 @@
 add_library(serial serial.cpp)
+target_link_libraries(serial Setupapi)
 target_include_directories(serial
 	PUBLIC
 		$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>

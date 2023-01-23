@@ -9,6 +9,34 @@
 
 namespace wrt
 {
+	class Serial
+	{
+	public:
+		Serial(HANDLE handle, int port, int baudRate = CBR_115200);
+		Serial(Serial&& other) noexcept;
+		Serial(Serial& other) = delete;
+		Serial& operator=(Serial&& other) noexcept;
+		Serial& operator=(Serial&) = delete;
+		virtual ~Serial();
+
+		bool SetBaudRate(int baudRate);
+		bool SetTimeouts();
+
+		bool Write(int value);
+		bool Write(const std::string& text);
+
+	private:
+		HANDLE m_handle;
+		int m_port;
+		int m_baudRate;
+	};
+
+	std::optional<Serial> OpenSerial(
+		const std::string& vendorId,
+		const std::string& productId);
+
+	std::optional<Serial> OpenSerial(int comPort);
+
 	/**
 	 * @brief Create hardware id from vendor id and product id
 	 *

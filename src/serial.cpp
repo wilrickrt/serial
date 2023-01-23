@@ -22,6 +22,128 @@ namespace wrt
 		return result;
 	}
 
+	Serial::Serial(HANDLE handle, int port, int baudRate)
+		: m_handle(handle), m_port(port), m_baudRate(baudRate)
+	{}
+
+	Serial::Serial(Serial&& other) noexcept
+		: Serial(other.m_handle, other.m_port, other.m_baudRate)
+	{
+		other.m_handle = 0;
+	}
+
+	Serial& Serial::operator=(Serial&& other) noexcept
+	{
+		if (this != &other)
+		{
+			m_handle = other.m_handle;
+			m_port = other.m_port;
+			m_baudRate = other.m_baudRate;
+			other.m_handle = 0;
+		}
+		return *this;
+	}
+
+	Serial::~Serial()
+	{
+		if (m_handle)
+		{
+			CloseHandle(m_handle);
+		}
+	}
+
+	bool Serial::SetBaudRate(int baudRate)
+	{
+		DCB dcbSerialParams = { 0 };
+		dcbSerialParams.DCBlength = sizeof(dcbSerialParams);
+		if (!GetCommState(m_handle, &dcbSerialParams))
+		{
+			return false; // unable to get current commstate
+		}
+
+		dcbSerialParams.BaudRate = baudRate;
+		dcbSerialParams.ByteSize = 8;
+		dcbSerialParams.StopBits = ONESTOPBIT;
+		dcbSerialParams.Parity = NOPARITY;
+		if (!SetCommState(m_handle, &dcbSerialParams))
+		{
+			return false; // unable to set new commstate
+		}
+
+		m_baudRate = baudRate;
+
+		return true;
+	}
+
+	bool Serial::SetTimeouts()
+	{
+		COMMTIMEOUTS timeouts = { 0 };
+		timeouts.ReadIntervalTimeout = 50;
+		timeouts.ReadTotalTimeoutConstant = 50;
+		timeouts.ReadTotalTimeoutMultiplier = 10;
+		timeouts.WriteTotalTimeoutConstant = 50;
+		timeouts.WriteTotalTimeoutMultiplier = 10;
+
+		return SetCommTimeouts(m_handle, &timeouts);
+	}
+
+	bool Serial::Write(int value)
+	{
+		DWORD written;
+		WriteFile(m_handle,
+			(void*)value,
+			sizeof(value),
+			&written,
+			nullptr);
+		return written == sizeof(value);
+	}
+
+	bool Serial::Write(const std::string& text)
+	{
+		DWORD written;
+		WriteFile(m_handle,
+			text.c_str(),
+			text.size(),
+			&written,
+			nullptr);
+		return written == text.size();
+	}
+
+	std::optional<Serial> OpenSerial(
+		const std::string& vendorId, 
+		const std::string& productId)
+	{
+		if (auto port = FindComPort(vendorId, productId); port)
+		{
+			return OpenSerial(*port);
+		}
+		return {};
+	}
+
+	std::optional<Serial> OpenSerial(int comPort)
+	{
+		std::string portName{ "\\\\.\\COM" + std::to_string(comPort) };
+		HANDLE handle = CreateFile(portName.c_str(),
+			GENERIC_READ | GENERIC_WRITE,
+			0,
+			nullptr,
+			OPEN_EXISTING,
+			0,
+			nullptr);
+		if (handle == INVALID_HANDLE_VALUE)
+		{
+			return {}; // failed to open the port
+		}
+
+		Serial serial(handle, comPort);
+		if (serial.SetBaudRate(CBR_115200) && serial.SetTimeouts())
+		{
+			return serial;
+		}
+
+		return {}; // failed to initialize
+	}
+
 	std::string CreateHardwareID(
 		const std::string& vendorId, 
 		const std::string& productId)
