@@ -4,7 +4,7 @@ set(serial_VERSION 0.2.0)
 
 project(serial
         VERSION ${serial_VERSION}
-        DESCRIPTION "Assetto Corsa Competizione shared memory"
+        DESCRIPTION "Windows serial communication"
         HOMEPAGE_URL "https://github.com/wilrickrt/serial"
         LANGUAGES CXX)
 

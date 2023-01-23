@@ -75,14 +75,20 @@ namespace wrt
 		return true;
 	}
 
-	bool Serial::SetTimeouts()
+	bool Serial::SetTimeouts(
+		DWORD readIntervalTimeout,
+		DWORD readTotalTimeoutConstant,
+		DWORD readTotalTimeoutMultiplier,
+		DWORD writeTotalTimeoutConstant,
+		DWORD writeTotalTimeoutMultiplier
+	)
 	{
 		COMMTIMEOUTS timeouts = { 0 };
-		timeouts.ReadIntervalTimeout = 50;
-		timeouts.ReadTotalTimeoutConstant = 50;
-		timeouts.ReadTotalTimeoutMultiplier = 10;
-		timeouts.WriteTotalTimeoutConstant = 50;
-		timeouts.WriteTotalTimeoutMultiplier = 10;
+		timeouts.ReadIntervalTimeout = readIntervalTimeout;
+		timeouts.ReadTotalTimeoutConstant = readTotalTimeoutConstant;
+		timeouts.ReadTotalTimeoutMultiplier = readTotalTimeoutMultiplier;
+		timeouts.WriteTotalTimeoutConstant = writeTotalTimeoutConstant;
+		timeouts.WriteTotalTimeoutMultiplier = writeTotalTimeoutMultiplier;
 
 		return SetCommTimeouts(m_handle, &timeouts);
 	}
@@ -113,7 +119,12 @@ namespace wrt
 		const std::string& vendorId, 
 		const std::string& productId)
 	{
-		if (auto port = FindComPort(vendorId, productId); port)
+		return OpenSerial(CreateHardwareID(vendorId, productId));
+	}
+
+	std::optional<Serial> OpenSerial(const std::string& hardwareId)
+	{
+		if (auto port = FindComPort(hardwareId); port)
 		{
 			return OpenSerial(*port);
 		}
